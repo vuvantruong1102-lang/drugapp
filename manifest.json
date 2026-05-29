@@ -1,0 +1,17 @@
+{
+  "name": "Tra cứu Dược thư Quốc gia",
+  "short_name": "Dược thư",
+  "description": "Tra cứu thông tin thuốc theo Dược thư Quốc gia Việt Nam 2018",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#dc143b",
+  "lang": "vi",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

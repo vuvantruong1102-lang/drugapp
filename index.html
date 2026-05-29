@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#dc143b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dược thư">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Tra cứu Dược thư Quốc gia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --brand:#dc143b;
+  --brand-dark:#b50f30;
+  --brand-soft:#fdeef1;
+  --ink:#1a1416;
+  --ink-soft:#6b5e62;
+  --line:#efe7e9;
+  --bg:#fbf7f8;
+  --card:#ffffff;
+  --amber:#c2410c;
+  --amber-soft:#fff1e8;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bot:env(safe-area-inset-bottom,0px);
+  --nav-h:64px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+  background:var(--bg);color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  overscroll-behavior-y:none;
+}
+.app{max-width:560px;margin:0 auto;min-height:100vh;position:relative}
+
+/* ---------- Header ---------- */
+.header{
+  position:sticky;top:0;z-index:30;
+  padding:calc(var(--safe-top) + 16px) 20px 14px;
+  background:linear-gradient(160deg,var(--brand) 0%,var(--brand-dark) 100%);
+  color:#fff;border-radius:0 0 26px 26px;
+  box-shadow:0 10px 30px -12px rgba(181,15,48,.5);
+}
+.header h1{
+  font-family:'Fraunces',serif;font-weight:600;
+  font-size:22px;line-height:1.1;margin:0;letter-spacing:-.01em;
+  display:flex;align-items:center;gap:10px;
+}
+.header h1 .logo{width:30px;height:30px;flex:none}
+.header .sub{font-size:12.5px;opacity:.82;margin-top:3px;font-weight:500}
+.search{
+  margin-top:14px;display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,.16);backdrop-filter:blur(6px);
+  border:1px solid rgba(255,255,255,.25);
+  border-radius:16px;padding:12px 14px;
+}
+.search svg{width:19px;height:19px;flex:none;opacity:.9}
+.search input{
+  flex:1;border:0;background:transparent;color:#fff;
+  font-size:15px;font-family:inherit;outline:none;font-weight:500;
+}
+.search input::placeholder{color:rgba(255,255,255,.7)}
+.search .clr{opacity:.8;font-size:18px;padding:0 2px;display:none}
+.search.has .clr{display:block}
+
+/* ---------- Page wrap ---------- */
+.scroll{padding:16px 16px calc(var(--nav-h) + var(--safe-bot) + 24px);}
+.panel-title{
+  font-family:'Fraunces',serif;font-weight:600;font-size:18px;
+  margin:6px 2px 4px;letter-spacing:-.01em;
+}
+.panel-desc{font-size:13px;color:var(--ink-soft);margin:0 2px 14px;line-height:1.5}
+
+/* ---------- Drug list ---------- */
+.dlist{display:flex;flex-direction:column;gap:9px}
+.drug{
+  background:var(--card);border:1px solid var(--line);
+  border-radius:16px;padding:14px 15px;cursor:pointer;
+  display:flex;align-items:center;gap:12px;
+  transition:transform .12s ease, box-shadow .12s ease, border-color .12s;
+}
+.drug:active{transform:scale(.985);box-shadow:0 6px 18px -10px rgba(0,0,0,.2)}
+.drug .dot{
+  width:38px;height:38px;border-radius:11px;flex:none;
+  background:var(--brand-soft);color:var(--brand);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Fraunces',serif;font-weight:600;font-size:17px;
+}
+.drug .info{flex:1;min-width:0}
+.drug .nm{font-weight:600;font-size:15px;letter-spacing:-.01em}
+.drug .ty{font-size:12px;color:var(--ink-soft);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.drug .chev{color:#cdbfc3;flex:none}
+.badge{
+  font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;
+  white-space:nowrap;letter-spacing:.01em;
+}
+.badge.cam{background:var(--brand-soft);color:var(--brand-dark)}
+.badge.tt{background:var(--amber-soft);color:var(--amber)}
+.section-label{
+  display:flex;align-items:center;gap:8px;margin:18px 2px 9px;
+  font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--ink-soft);
+}
+.section-label .ln{flex:1;height:1px;background:var(--line)}
+.empty{text-align:center;color:var(--ink-soft);padding:50px 20px;font-size:14px}
+.empty svg{width:46px;height:46px;opacity:.4;margin-bottom:10px}
+.count{font-size:12px;color:var(--ink-soft);margin:2px 2px 12px;font-weight:500}
+
+/* ---------- Detail view ---------- */
+.detail{
+  position:fixed;inset:0;z-index:50;background:var(--bg);
+  max-width:560px;margin:0 auto;
+  transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);
+  display:flex;flex-direction:column;
+}
+.detail.open{transform:translateX(0)}
+.dhead{
+  padding:calc(var(--safe-top) + 14px) 18px 18px;
+  background:linear-gradient(160deg,var(--brand) 0%,var(--brand-dark) 100%);
+  color:#fff;border-radius:0 0 24px 24px;flex:none;
+}
+.back{
+  display:inline-flex;align-items:center;gap:6px;color:#fff;
+  background:rgba(255,255,255,.16);border:0;font-family:inherit;
+  font-size:13.5px;font-weight:600;padding:8px 14px 8px 10px;border-radius:30px;
+  cursor:pointer;margin-bottom:14px;
+}
+.dhead .dnm{font-family:'Fraunces',serif;font-weight:600;font-size:25px;line-height:1.12;letter-spacing:-.015em}
+.dhead .datc{font-size:12.5px;opacity:.85;margin-top:4px;font-weight:500}
+.dflags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.dflags .fb{font-size:11px;font-weight:700;padding:5px 11px;border-radius:30px;background:rgba(255,255,255,.18);color:#fff;display:flex;gap:5px;align-items:center}
+.dflags .fb.cam{background:#fff;color:var(--brand-dark)}
+.dbody{flex:1;overflow-y:auto;padding:14px 16px calc(var(--safe-bot) + 30px);-webkit-overflow-scrolling:touch}
+
+/* accordion */
+.acc{
+  background:var(--card);border:1px solid var(--line);border-radius:15px;
+  margin-bottom:9px;overflow:hidden;
+}
+.acc-h{
+  display:flex;align-items:center;gap:11px;padding:15px 15px;cursor:pointer;
+  user-select:none;
+}
+.acc-h .ico{
+  width:30px;height:30px;border-radius:9px;flex:none;
+  background:var(--brand-soft);color:var(--brand);
+  display:flex;align-items:center;justify-content:center;
+}
+.acc-h .ico svg{width:16px;height:16px}
+.acc-h .ttl{flex:1;font-weight:600;font-size:14px;letter-spacing:-.01em}
+.acc-h .arr{color:#c9bbbf;transition:transform .25s ease;flex:none}
+.acc.open .acc-h .arr{transform:rotate(90deg)}
+.acc-c{
+  display:grid;grid-template-rows:0fr;transition:grid-template-rows .28s ease;
+}
+.acc.open .acc-c{grid-template-rows:1fr}
+.acc-c-in{overflow:hidden}
+.acc-txt{
+  padding:0 15px 16px;font-size:13.7px;line-height:1.62;color:#33282b;
+  white-space:pre-wrap;
+}
+.acc-txt.hl{border-left:3px solid var(--brand);padding-left:12px;margin:0 15px 16px;background:var(--brand-soft);border-radius:0 8px 8px 0;padding-top:10px;padding-bottom:10px}
+
+/* ---------- Bottom nav ---------- */
+.nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:40;
+  max-width:560px;margin:0 auto;
+  background:rgba(255,255,255,.92);backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);
+  display:flex;padding:8px 6px calc(var(--safe-bot) + 8px);
+  height:calc(var(--nav-h) + var(--safe-bot));
+}
+.nav button{
+  flex:1;border:0;background:none;font-family:inherit;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  color:#9b8b8f;font-size:9.5px;font-weight:600;padding:4px 2px;
+  transition:color .15s;border-radius:12px;
+}
+.nav button svg{width:21px;height:21px}
+.nav button.on{color:var(--brand)}
+.nav .lbl{letter-spacing:.01em;text-align:center;line-height:1.15}
+
+/* sub-tabs (cấm / thận trọng filter) */
+.subtabs{display:flex;gap:7px;margin:2px 2px 14px}
+.subtabs button{
+  flex:1;border:1px solid var(--line);background:var(--card);font-family:inherit;
+  font-size:12.5px;font-weight:600;padding:9px;border-radius:12px;cursor:pointer;
+  color:var(--ink-soft);transition:.15s;
+}
+.subtabs button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+.subtabs button.on.amber{background:var(--amber);border-color:var(--amber)}
+
+/* interaction result */
+.intro-card{
+  background:var(--brand-soft);border:1px solid #f6dbe1;border-radius:15px;
+  padding:14px 15px;font-size:13px;line-height:1.55;color:var(--brand-dark);margin-bottom:14px;
+}
+.ix-self{
+  background:var(--card);border:1px solid var(--line);border-radius:15px;padding:15px;margin-bottom:14px;
+}
+.ix-self h3{margin:0 0 8px;font-size:14px;font-family:'Fraunces',serif;font-weight:600;color:var(--brand-dark)}
+.ix-self p{margin:0;font-size:13.3px;line-height:1.6;color:#33282b;white-space:pre-wrap}
+
+.loader{
+  position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:var(--bg);z-index:100;gap:16px;
+}
+.loader .ring{width:42px;height:42px;border:3px solid var(--brand-soft);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader .t{font-size:13px;color:var(--ink-soft);font-weight:500}
+.fade{animation:fade .35s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+mark{background:#ffe08a;color:inherit;border-radius:3px;padding:0 1px}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1><img class="logo" src="icon.svg" alt=""> <span id="hTitle">Dược thư Quốc gia</span></h1>
+    <div class="sub" id="hSub">Tra cứu thông tin thuốc · Việt Nam 2018</div>
+    <div class="search" id="searchBox">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="search" type="search" placeholder="Tìm tên thuốc, hoạt chất…" autocomplete="off">
+      <span class="clr" id="clr">✕</span>
+    </div>
+  </div>
+
+  <div class="scroll" id="scroll"></div>
+
+  <nav class="nav" id="nav"></nav>
+</div>
+
+<div class="detail" id="detail">
+  <div class="dhead">
+    <button class="back" id="back">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m15 18-6-6 6-6"/></svg>
+      Quay lại
+    </button>
+    <div class="dnm" id="dNm"></div>
+    <div class="datc" id="dAtc"></div>
+    <div class="dflags" id="dFlags"></div>
+  </div>
+  <div class="dbody" id="dBody"></div>
+</div>
+
+<div class="loader" id="loader"><div class="ring"></div><div class="t">Đang tải dữ liệu Dược thư…</div></div>
+
+<script>
+const ICONS={
+  search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>',
+  ix:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>',
+  preg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2.5"/><path d="M12 8c-2 0-3 2-3 5 0 0-1 1-1 3 0 2 1.5 3 4 3s4-1 4-3c0-2-1-3-1-3 0-3-1-5-3-5z"/></svg>',
+  child:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2.5"/><path d="M9 22v-5l-2-2 2-5h6l2 5-2 2v5"/></svg>',
+  old:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="4.5" r="2.3"/><path d="M11 7v6m0 0-3 8m3-8 2 5m4 4-2-12"/></svg>',
+  liver:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7c4-2 14-3 18 0 1 4-1 9-6 9-2 0-2-2-4-2s-3 3-5 1S2 9 3 7z"/></svg>',
+  kidney:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3C5 3 4 6 4 9c0 5 3 8 4 9 1-1 2-3 2-5 0-1-1-2-1-3 0 0 2-1 2-3s-2-4-3-4z"/><path d="M16 3c3 0 4 3 4 6 0 5-3 8-4 9-1-1-2-3-2-5 0-1 1-2 1-3 0 0-2-1-2-3s2-4 3-4z"/></svg>',
+};
+const SECTIONS=[
+  ["loai_thuoc","Loại thuốc","pill"],
+  ["dang_ham_luong","Dạng thuốc và hàm lượng","flask"],
+  ["duoc_ly","Dược lý và cơ chế tác dụng","atom"],
+  ["chi_dinh","Chỉ định","check"],
+  ["lieu_dung","Liều lượng và cách dùng","beaker"],
+  ["chong_chi_dinh","Chống chỉ định","ban"],
+  ["than_trong","Thận trọng","alert"],
+  ["mang_thai","Thời kỳ mang thai","preg"],
+  ["cho_con_bu","Thời kỳ cho con bú","drop"],
+  ["adr","Tác dụng không mong muốn (ADR)","warn"],
+  ["xu_tri_adr","Hướng dẫn cách xử trí ADR","aid"],
+  ["tuong_tac","Tương tác thuốc","ix"],
+  ["on_dinh","Độ ổn định và bảo quản","box"],
+  ["qua_lieu","Quá liều và xử trí","pulse"],
+  ["qui_che","Thông tin quy chế","doc"],
+  ["ten_thuong_mai","Tên thương mại","tag"],
+];
+const SEC_ICON={
+  pill:'<path d="M10.5 20.5 3.5 13.5a4.95 4.95 0 0 1 7-7l7 7a4.95 4.95 0 0 1-7 7z"/><path d="M8.5 8.5l7 7"/>',
+  flask:'<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/>',
+  atom:'<circle cx="12" cy="12" r="1.5"/><ellipse cx="12" cy="12" rx="10" ry="4.5"/><ellipse cx="12" cy="12" rx="10" ry="4.5" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.5" transform="rotate(120 12 12)"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>',
+  beaker:'<path d="M6 3h12M8 3v7l-3 8a1.5 1.5 0 0 0 1.5 2h11A1.5 1.5 0 0 0 19 18l-3-8V3"/><path d="M6.5 14h11"/>',
+  ban:'<circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/>',
+  alert:'<path d="M10.3 4 2.6 17a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 4a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',
+  preg:'<circle cx="12" cy="5" r="2.5"/><path d="M12 8c-2 0-3 2-3 5 0 0-1 1-1 3 0 2 1.5 3 4 3s4-1 4-3c0-2-1-3-1-3 0-3-1-5-3-5z"/>',
+  drop:'<path d="M12 3s6 6.5 6 10.5a6 6 0 0 1-12 0C6 9.5 12 3 12 3z"/>',
+  warn:'<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/>',
+  aid:'<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M12 10v5M9.5 12.5h5M9 6V4h6v2"/>',
+  ix:'<path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/>',
+  box:'<path d="M3 8 12 3l9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
+  pulse:'<path d="M3 12h4l2-6 4 12 2-6h6"/>',
+  doc:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M8 13h8M8 17h6"/>',
+  tag:'<path d="M3 12V5a2 2 0 0 1 2-2h7l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.5"/>',
+};
+const PANELS=[
+  {id:'lookup',label:'Tra cứu',icon:'search',title:'Tra cứu thông tin thuốc',desc:'Tìm theo tên hoạt chất hoặc tên thuốc. Nhấn vào thuốc để xem đầy đủ thông tin.'},
+  {id:'ix',label:'Tương tác',icon:'ix',title:'Tra cứu tương tác thuốc',desc:'Nhập hoạt chất để xem các thuốc có tương tác với nó theo Dược thư.'},
+  {id:'pregnancy',label:'Phụ nữ\ncó thai',icon:'preg',title:'Thận trọng với phụ nữ có thai',desc:'Phân loại theo mức độ. Nhấn vào thuốc để xem chi tiết.',flag:'pregnancy'},
+  {id:'children',label:'Trẻ em',icon:'child',title:'Thận trọng với trẻ em',desc:'Phân loại theo mức độ. Nhấn vào thuốc để xem chi tiết.',flag:'children'},
+  {id:'elderly',label:'Người\ngià',icon:'old',title:'Thận trọng với người già',desc:'Phân loại theo mức độ. Nhấn vào thuốc để xem chi tiết.',flag:'elderly'},
+  {id:'liver',label:'Suy\ngan',icon:'liver',title:'Thận trọng với suy gan',desc:'Phân loại theo mức độ. Nhấn vào thuốc để xem chi tiết.',flag:'liver'},
+  {id:'kidney',label:'Suy\nthận',icon:'kidney',title:'Thận trọng với suy thận',desc:'Phân loại theo mức độ. Nhấn vào thuốc để xem chi tiết.',flag:'kidney'},
+];
+const FLAG_EV_KEY={pregnancy:'pregnancy',children:'children',elderly:'elderly',liver:'liver',kidney:'kidney'};
+
+let DATA=[], cur='lookup', subFilter='all', query='';
+
+function norm(s){return (s||'').toLowerCase().normalize('NFC')
+  .replace(/[*().,;:]/g,' ').replace(/đ/g,'d').replace(/\s+/g,' ').trim();}
+function esc(s){return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+function letterOf(n){const m=(n||'?').match(/[A-Za-zÀ-ỹ]/);return (m?m[0]:'?').toUpperCase();}
+
+// ---- nav ----
+const navEl=document.getElementById('nav');
+navEl.innerHTML=PANELS.map(p=>
+  `<button data-p="${p.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${ICONS[p.icon]||''}</svg><span class="lbl">${p.label.replace(/\n/g,'<br>')}</span></button>`
+).join('');
+navEl.querySelectorAll('button').forEach(b=>b.onclick=()=>{go(b.dataset.p)});
+
+function go(id){cur=id;subFilter='all';render();window.scrollTo(0,0);
+  document.getElementById('scroll').scrollTop=0;}
+
+// ---- search ----
+const sEl=document.getElementById('search'),clrEl=document.getElementById('clr'),sBox=document.getElementById('searchBox');
+sEl.addEventListener('input',()=>{query=sEl.value;sBox.classList.toggle('has',!!query);render();});
+clrEl.onclick=()=>{sEl.value='';query='';sBox.classList.remove('has');render();sEl.focus();};
+
+// ---- render ----
+function render(){
+  const p=PANELS.find(x=>x.id===cur);
+  document.getElementById('hTitle').textContent=p.label.replace(/\n/g,' ');
+  navEl.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.p===cur));
+  const scroll=document.getElementById('scroll');
+  if(cur==='ix'){renderIx(scroll,p);return;}
+  if(p.flag){renderFlag(scroll,p);return;}
+  renderLookup(scroll,p);
+}
+
+function drugRow(d,extra){
+  const ty=d.s.loai_thuoc?d.s.loai_thuoc.split('.')[0]:'';
+  return `<div class="drug" data-id="${d.id}">
+    <div class="dot">${letterOf(d.name)}</div>
+    <div class="info"><div class="nm">${esc(d.name)}</div><div class="ty">${esc(ty)||d.atc||''}</div></div>
+    ${extra||''}
+    <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+  </div>`;
+}
+function bindRows(el){el.querySelectorAll('.drug').forEach(r=>r.onclick=()=>openDetail(+r.dataset.id));}
+
+function renderLookup(scroll,p){
+  let list=DATA;
+  const q=norm(query);
+  if(q){list=DATA.filter(d=>norm(d.name).includes(q)||norm(d.s.ten_thuong_mai).includes(q)||norm(d.atc).includes(q));}
+  let html=`<div class="panel-title fade">${p.title}</div><div class="panel-desc">${p.desc}</div>`;
+  if(!list.length){html+=emptyHtml('Không tìm thấy thuốc phù hợp.');scroll.innerHTML=html;return;}
+  html+=`<div class="count">${list.length} thuốc</div>`;
+  if(q){
+    html+=`<div class="dlist">${list.slice(0,200).map(d=>drugRow(d)).join('')}</div>`;
+  }else{
+    // group by first letter
+    const groups={};
+    list.forEach(d=>{const L=letterOf(d.name);(groups[L]=groups[L]||[]).push(d);});
+    Object.keys(groups).sort().forEach(L=>{
+      html+=`<div class="section-label"><span>${L}</span><span class="ln"></span></div>`;
+      html+=`<div class="dlist">${groups[L].map(d=>drugRow(d)).join('')}</div>`;
+    });
+  }
+  scroll.innerHTML=html;bindRows(scroll);
+}
+
+function renderFlag(scroll,p){
+  const key=p.flag;
+  const q=norm(query);
+  let pool=DATA.filter(d=>d.flags[key]==='cam'||d.flags[key]==='than_trong');
+  if(q)pool=pool.filter(d=>norm(d.name).includes(q));
+  const cam=pool.filter(d=>d.flags[key]==='cam');
+  const tt=pool.filter(d=>d.flags[key]==='than_trong');
+  let show=pool;
+  if(subFilter==='cam')show=cam;
+  if(subFilter==='tt')show=tt;
+  let html=`<div class="panel-title fade">${p.title}</div><div class="panel-desc">${p.desc}</div>`;
+  html+=`<div class="subtabs">
+    <button data-f="all" class="${subFilter==='all'?'on':''}">Tất cả · ${pool.length}</button>
+    <button data-f="cam" class="${subFilter==='cam'?'on':''}">⛔ Cấm · ${cam.length}</button>
+    <button data-f="tt" class="${subFilter==='tt'?'on amber':''}">⚠️ Thận trọng · ${tt.length}</button>
+  </div>`;
+  if(!show.length){html+=emptyHtml('Không có thuốc trong nhóm này.');}
+  else{
+    const mk=d=>{
+      const lvl=d.flags[key];
+      const b=lvl==='cam'?`<span class="badge cam">CẤM</span>`:`<span class="badge tt">THẬN TRỌNG</span>`;
+      return drugRow(d,b);
+    };
+    if(subFilter==='all'){
+      if(cam.length){html+=`<div class="section-label"><span>⛔ Cấm tuyệt đối</span><span class="ln"></span></div><div class="dlist">${cam.map(mk).join('')}</div>`;}
+      if(tt.length){html+=`<div class="section-label"><span>⚠️ Cần thận trọng</span><span class="ln"></span></div><div class="dlist">${tt.map(mk).join('')}</div>`;}
+    }else{
+      html+=`<div class="dlist">${show.map(mk).join('')}</div>`;
+    }
+  }
+  scroll.innerHTML=html;
+  scroll.querySelectorAll('.subtabs button').forEach(b=>b.onclick=()=>{subFilter=b.dataset.f;render();});
+  bindRows(scroll);
+}
+
+function renderIx(scroll,p){
+  const q=norm(query);
+  let html=`<div class="panel-title fade">${p.title}</div><div class="panel-desc">${p.desc}</div>`;
+  if(!q){
+    html+=`<div class="intro-card">Nhập tên một hoạt chất vào ô tìm kiếm phía trên. Ứng dụng sẽ hiển thị mục tương tác của chính thuốc đó, cùng danh sách các thuốc khác có ghi nhận tương tác với hoạt chất này.</div>`;
+    // show suggestions
+    html+=`<div class="count">Gợi ý — các thuốc thường tra:</div><div class="dlist">`;
+    ['Warfarin','Digoxin','Phenytoin','Aspirin','Metformin','Theophylin'].forEach(nm=>{
+      const d=DATA.find(x=>norm(x.name)===norm(nm));if(d)html+=drugRow(d);
+    });
+    html+=`</div>`;
+    scroll.innerHTML=html;bindRows(scroll);return;
+  }
+  // find the focus drug(s)
+  const focus=DATA.filter(d=>norm(d.name).includes(q));
+  const others=DATA.filter(d=>!norm(d.name).includes(q) && d.tt_lc && d.tt_lc.includes(q));
+  if(focus.length){
+    const d=focus[0];
+    if(d.s.tuong_tac){
+      html+=`<div class="ix-self"><h3>Tương tác của ${esc(d.name)}</h3><p>${hlText(d.s.tuong_tac,q)}</p></div>`;
+    }
+  }
+  html+=`<div class="count">${others.length} thuốc khác có ghi nhận tương tác với “${esc(query)}”</div>`;
+  if(!others.length && !focus.length){html+=emptyHtml('Không tìm thấy hoạt chất hoặc tương tác liên quan.');}
+  else if(others.length){
+    html+=`<div class="dlist">${others.slice(0,150).map(d=>drugRow(d)).join('')}</div>`;
+  }
+  scroll.innerHTML=html;bindRows(scroll);
+}
+
+function hlText(t,q){
+  let e=esc(t);
+  if(q){const re=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+    // highlight on normalized-ish: simple case-insensitive
+    e=e.replace(re,'<mark>$1</mark>');}
+  return e;
+}
+function emptyHtml(msg){return `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><div>${msg}</div></div>`;}
+
+// ---- detail ----
+const detail=document.getElementById('detail');
+document.getElementById('back').onclick=closeDetail;
+function openDetail(id){
+  const d=DATA.find(x=>x.id===id);if(!d)return;
+  document.getElementById('dNm').textContent=d.name;
+  document.getElementById('dAtc').textContent=d.atc?('Mã ATC: '+d.atc):'';
+  // flags row
+  const fl=[];
+  [['pregnancy','Có thai'],['children','Trẻ em'],['elderly','Người già'],['liver','Suy gan'],['kidney','Suy thận']].forEach(([k,lab])=>{
+    const v=d.flags[k];if(v==='cam')fl.push(`<span class="fb cam">⛔ ${lab}</span>`);
+    else if(v==='than_trong')fl.push(`<span class="fb">⚠️ ${lab}</span>`);
+  });
+  document.getElementById('dFlags').innerHTML=fl.join('');
+  // accordions
+  const q=norm(query);
+  let html='';
+  SECTIONS.forEach(([key,title,ico],i)=>{
+    const txt=d.s[key];if(!txt)return;
+    const open=i===0?'open':'';
+    html+=`<div class="acc ${open}" data-acc>
+      <div class="acc-h"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${SEC_ICON[ico]||''}</svg></div>
+      <div class="ttl">${title}</div>
+      <svg class="arr" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m9 18 6-6-6-6"/></svg></div>
+      <div class="acc-c"><div class="acc-c-in"><div class="acc-txt">${esc(txt)}</div></div></div>
+    </div>`;
+  });
+  document.getElementById('dBody').innerHTML=html;
+  document.getElementById('dBody').scrollTop=0;
+  detail.querySelectorAll('[data-acc] .acc-h').forEach(h=>{
+    h.onclick=()=>h.parentElement.classList.toggle('open');
+  });
+  detail.classList.add('open');
+  history.pushState({detail:1},'');
+}
+function closeDetail(){detail.classList.remove('open');}
+window.addEventListener('popstate',()=>{if(detail.classList.contains('open'))closeDetail();});
+
+// ---- load ----
+fetch('data.json').then(r=>r.json()).then(j=>{
+  DATA=j.drugs.sort((a,b)=>a.name.localeCompare(b.name,'vi'));
+  document.getElementById('hSub').textContent=`${DATA.length} chuyên luận · Dược thư Quốc gia VN 2018`;
+  document.getElementById('loader').classList.add('hidden');
+  render();
+}).catch(e=>{
+  document.getElementById('loader').innerHTML='<div class="t">Lỗi tải dữ liệu. Kiểm tra lại file data.json.</div>';
+});
+
+// ---- PWA ----
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
