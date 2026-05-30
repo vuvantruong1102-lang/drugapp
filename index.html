@@ -95,6 +95,7 @@ body{
 .drug .info{flex:1;min-width:0}
 .drug .nm{font-weight:600;font-size:15px;letter-spacing:-.01em}
 .drug .ty{font-size:12px;color:var(--ink-soft);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.drug .ty .brandhit{color:var(--brand);font-weight:700}
 .drug .chev{color:#cdbfc3;flex:none}
 .badge{
   font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;
@@ -311,8 +312,17 @@ const FLAG_EV_KEY={pregnancy:'pregnancy',children:'children',elderly:'elderly',l
 
 let DATA=[], cur='lookup', subFilter='all', query='';
 
-function norm(s){return (s||'').toLowerCase().normalize('NFC')
-  .replace(/[*().,;:]/g,' ').replace(/đ/g,'d').replace(/\s+/g,' ').trim();}
+function norm(s){return (s||'').toLowerCase()
+  .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+  .replace(/đ/g,'d')
+  .replace(/[*().,;:]/g,' ').replace(/\s+/g,' ').trim();}
+// tách danh sách tên thương mại thành mảng, tìm brand khớp truy vấn
+function brandMatch(d,q){
+  const tm=d.s.ten_thuong_mai;if(!tm)return null;
+  const parts=tm.split(/[;,]/).map(x=>x.trim()).filter(Boolean);
+  for(const b of parts){if(norm(b).includes(q))return b;}
+  return norm(tm).includes(q)?tm.split(/[;,]/)[0].trim():null;
+}
 function esc(s){return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
 function letterOf(n){const m=(n||'?').match(/[A-Za-zÀ-ỹ]/);return (m?m[0]:'?').toUpperCase();}
 
@@ -342,11 +352,12 @@ function render(){
   renderLookup(scroll,p);
 }
 
-function drugRow(d,extra){
-  const ty=d.s.loai_thuoc?d.s.loai_thuoc.split('.')[0]:'';
+function drugRow(d,extra,brand){
+  let ty=d.s.loai_thuoc?d.s.loai_thuoc.split('.')[0]:'';
+  if(brand){ty=`<span class="brandhit">${esc(brand)}</span> → ${esc(d.name)}`;}
   return `<div class="drug" data-id="${d.id}">
     <div class="dot">${letterOf(d.name)}</div>
-    <div class="info"><div class="nm">${esc(d.name)}</div><div class="ty">${esc(ty)||d.atc||''}</div></div>
+    <div class="info"><div class="nm">${esc(d.name)}</div><div class="ty">${ty||d.atc||''}</div></div>
     ${extra||''}
     <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
   </div>`;
@@ -354,23 +365,35 @@ function drugRow(d,extra){
 function bindRows(el){el.querySelectorAll('.drug').forEach(r=>r.onclick=()=>openDetail(+r.dataset.id));}
 
 function renderLookup(scroll,p){
-  let list=DATA;
-  const q=norm(query);
-  if(q){list=DATA.filter(d=>norm(d.name).includes(q)||norm(d.s.ten_thuong_mai).includes(q)||norm(d.atc).includes(q));}
   let html=`<div class="panel-title fade">${p.title}</div><div class="panel-desc">${p.desc}</div>`;
-  if(!list.length){html+=emptyHtml('Không tìm thấy thuốc phù hợp.');scroll.innerHTML=html;return;}
-  html+=`<div class="count">${list.length} thuốc</div>`;
+  const q=norm(query);
   if(q){
-    html+=`<div class="dlist">${list.slice(0,200).map(d=>drugRow(d)).join('')}</div>`;
-  }else{
-    // group by first letter
-    const groups={};
-    list.forEach(d=>{const L=letterOf(d.name);(groups[L]=groups[L]||[]).push(d);});
-    Object.keys(groups).sort().forEach(L=>{
-      html+=`<div class="section-label"><span>${L}</span><span class="ln"></span></div>`;
-      html+=`<div class="dlist">${groups[L].map(d=>drugRow(d)).join('')}</div>`;
+    const byName=[], byBrand=[];
+    DATA.forEach(d=>{
+      if(norm(d.name).includes(q)||norm(d.atc).includes(q)){byName.push(d);}
+      else{const b=brandMatch(d,q);if(b)byBrand.push([d,b]);}
     });
+    const total=byName.length+byBrand.length;
+    if(!total){html+=emptyHtml('Không tìm thấy thuốc phù hợp.');scroll.innerHTML=html;return;}
+    html+=`<div class="count">${total} kết quả</div>`;
+    if(byName.length){
+      html+=`<div class="dlist">${byName.slice(0,200).map(d=>drugRow(d)).join('')}</div>`;
+    }
+    if(byBrand.length){
+      html+=`<div class="section-label"><span>🏷️ Khớp theo tên thương mại</span><span class="ln"></span></div>`;
+      html+=`<div class="dlist">${byBrand.slice(0,200).map(([d,b])=>drugRow(d,'',b)).join('')}</div>`;
+    }
+    scroll.innerHTML=html;bindRows(scroll);return;
   }
+  // no query: group by first letter
+  const list=DATA;
+  html+=`<div class="count">${list.length} thuốc</div>`;
+  const groups={};
+  list.forEach(d=>{const L=letterOf(d.name);(groups[L]=groups[L]||[]).push(d);});
+  Object.keys(groups).sort().forEach(L=>{
+    html+=`<div class="section-label"><span>${L}</span><span class="ln"></span></div>`;
+    html+=`<div class="dlist">${groups[L].map(d=>drugRow(d)).join('')}</div>`;
+  });
   scroll.innerHTML=html;bindRows(scroll);
 }
 
